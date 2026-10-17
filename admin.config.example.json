@@ -1,0 +1,15 @@
+{
+  "repoPath": "F:/Firefly-master/Firefly-master",
+  "host": "127.0.0.1",
+  "port": 4310,
+  "devPort": 4321,
+  "gitCommit": true,
+  "autoRestartDevOnConfigChange": true,
+  "media": {
+    "maxUploadBytes": 26214400,
+    "maxEdge": 2560,
+    "convertToWebp": true,
+    "webpQuality": 82,
+    "stripExif": true
+  }
+}

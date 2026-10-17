@@ -1,0 +1,116 @@
+:root {
+	--ff-bg: #f6f7f9;
+	--ff-panel: #ffffff;
+	--ff-border: #e4e7ed;
+	--ff-text: #303133;
+	--ff-muted: #909399;
+	--ff-accent: #5b7cfa;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+	height: 100%;
+	margin: 0;
+}
+
+body {
+	background: var(--ff-bg);
+	color: var(--ff-text);
+	font-family:
+		system-ui,
+		-apple-system,
+		"Segoe UI",
+		"Microsoft YaHei",
+		sans-serif;
+	font-size: 14px;
+}
+
+a {
+	color: var(--ff-accent);
+	text-decoration: none;
+}
+
+.ff-page {
+	padding: 18px 22px 40px;
+	max-width: 1360px;
+	margin: 0 auto;
+}
+
+.ff-page-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 14px;
+	flex-wrap: wrap;
+}
+
+.ff-page-title {
+	font-size: 20px;
+	font-weight: 600;
+	margin: 0;
+}
+
+.ff-hint {
+	color: var(--ff-muted);
+	font-size: 12px;
+	line-height: 1.6;
+}
+
+.ff-toolbar {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.ff-card {
+	background: var(--ff-panel);
+	border: 1px solid var(--ff-border);
+	border-radius: 10px;
+	padding: 16px;
+}
+
+.ff-mono {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.ff-editor-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 16px;
+	align-items: start;
+}
+
+@media (max-width: 1100px) {
+	.ff-editor-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.ff-log {
+	background: #1e1f26;
+	color: #d8dae0;
+	border-radius: 8px;
+	padding: 12px;
+	height: 320px;
+	overflow: auto;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.ff-log .stderr {
+	color: #ff9a9a;
+}
+
+.ff-log .system {
+	color: #8fd3ff;
+}

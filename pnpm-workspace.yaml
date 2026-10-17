@@ -1,0 +1,9 @@
+# pnpm 12 起 minimumReleaseAge 默认 1440 分钟（1 天）：
+# 发布时间不足 24 小时的包会被拒绝安装（例如 rollup 的各平台二进制包），
+# 表现为 ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION。这里关掉该策略。
+#
+# 参考：https://pnpm.io/supply-chain-security
+packages:
+  - "."
+
+minimumReleaseAge: 0

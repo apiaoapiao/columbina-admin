@@ -1,0 +1,7 @@
+node_modules/
+dist-server/
+web/dist/
+data/
+admin.config.json
+*.log
+.tmp/
