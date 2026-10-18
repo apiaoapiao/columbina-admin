@@ -1,46 +1,101 @@
-# Columbina Admin
+<p align="center">
+  <img src="public/assets/images/moon5.png" width="110" alt="Columbina Admin" />
+</p>
 
-给 [Firefly](https://github.com/CuteLeaf/Firefly) 博客用的**本地后台管理系统**。
+<h1 align="center">Columbina Admin</h1>
 
-它不改造博客、不新增数据库、不接管部署：直接读写你本地 Firefly 仓库里的 **Markdown 文件、相册目录、TS 配置数组**，改完在本地构建，产物照你原来的方式手动上传到虚拟主机。
+<p align="center">
+  给 <a href="https://github.com/CuteLeaf/Firefly">Firefly</a> 博客准备的本地内容管理后台<br />
+  不改主题 · 不建数据库 · 保持纯静态
+</p>
 
-> 📘 **完整技术文档见 [`docs/PROJECT.md`](docs/PROJECT.md)**（架构、写入管线、预览实现、API 参考、设计决策）
-> 本文只讲怎么用。
-
-```
-浏览器 (Vue3 + Element Plus)
-        ↓ HTTP / SSE
-Fastify 服务（127.0.0.1）
-        ↓ 文件读写（白名单）
-F:\your-blog\src\content\**      文章 / 动态 / 项目
-F:\your-blog\public\gallery\**   相册照片
-F:\your-blog\src\config\*.ts     相册、友链（只改值）
-```
+<p align="center">
+  <img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A520.11-339933?logo=node.js&logoColor=white" />
+  <img alt="Vue 3" src="https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white" />
+  <img alt="Fastify" src="https://img.shields.io/badge/Fastify-5-000000?logo=fastify&logoColor=white" />
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg" />
+</p>
 
 ---
 
-## 一、快速开始
+## 这是什么
 
-### 1. 环境
+Firefly 是「文件即内容 + 构建即发布」的静态博客，写作时的日常操作是这样：
 
-- **Node.js ≥ 20.11**（推荐 22）
-- **pnpm**（推荐；`corepack enable` 或 `npm install -g pnpm`），用 npm 也能跑
-- 已能正常构建的 Firefly 仓库（即仓库里装过依赖，存在 `node_modules`）
+- 写文章要手写 frontmatter，日期格式写错一个引号就能把整站构建搞挂
+- 插图要先转 webp、再算好相对路径放进 `posts/<slug>/images/`
+- 加相册要建目录 **并且** 改 `src/config/galleryConfig.ts`
+- 动态的文件名就是 URL，改个时间容易改出断链
+- 想看效果得开终端跑 `pnpm dev`，再切到浏览器刷新
 
-### 2. 安装并配置
+**Columbina Admin 把这些变成点几下鼠标**，而且完全不碰博客本身：
+
+- 不修改 `astro.config.mjs`、不碰 `src/pages`、不加数据库
+- 只写内容文件（md）、图片目录、以及 TS 配置里的**值**
+- 改完在本地构建，`dist/` 照你原来的方式上传到虚拟主机
+
+```
+┌─────────────────────────────┐
+│  浏览器（Vue 3 + Element Plus）│
+└──────────────┬──────────────┘
+               │ HTTP / SSE
+┌──────────────▼──────────────┐
+│  Fastify 服务（仅 127.0.0.1） │
+│  白名单校验 · 原子写入 · git  │
+└──────────────┬──────────────┘
+               │ 直接读写文件
+┌──────────────▼──────────────────────────────┐
+│ 你的 Firefly 仓库                             │
+│  src/content/posts/**     文章                │
+│  src/content/dynamic/**   动态                │
+│  src/content/projects/**  项目                │
+│  public/gallery/**        相册照片            │
+│  src/config/*.ts          相册 / 友链配置     │
+└─────────────────────────────────────────────┘
+```
+
+## 功能
+
+| 模块 | 能做什么 |
+|---|---|
+| **文章** | 列表筛选、Markdown 编辑、frontmatter 表单、封面图上传、草稿、置顶、系列、文章加密 |
+| **动态** | 时间线快速发布、置顶、位置、多图 |
+| **项目** | frontmatter + README 正文、外链数组编辑 |
+| **相册** | 建相册（目录 + 配置双写）、批量上传、设为封面、封面临时归档 |
+| **友链** | 增删改、权重排序、启用开关 |
+
+配套能力：
+
+- **真实预览** —— 点一下自动拉起 `astro dev`，iframe 里就是主题渲染后的页面（Mermaid、Callout、KaTeX、代码块全部生效），不是自己糊的一套 Markdown 渲染
+- **本地构建** —— 点「构建站点」，实时看日志流，产物在博客仓库的 `dist/`
+- **图片管线** —— 剥离 EXIF（含 GPS）、按方向自动摆正、限制长边、转 webp、SHA256 去重
+- **写入安全** —— 路径白名单、frontmatter round-trip 校验、TS 配置只替换数组文本区间、失败自动回滚、每次保存自动 `git commit`
+- **媒体库** —— 通用图片上传与路径复制
+
+## 快速开始
+
+### 1. 准备
+
+- Node.js ≥ 20.11
+- pnpm（`corepack enable` 或 `npm install -g pnpm`）
+- 一个**已经装好依赖**的 Firefly 仓库
+
+### 2. 安装
 
 ```bash
-cd firefly-admin
+git clone https://github.com/apiaoapiao/columbina-admin.git
+cd columbina-admin
 pnpm install
 ```
 
-复制配置样例：
+### 3. 配置
 
 ```bash
-copy admin.config.example.json admin.config.json
+copy admin.config.example.json admin.config.json   # Windows
+cp  admin.config.example.json admin.config.json    # Linux / macOS
 ```
 
-编辑 `admin.config.json`，**只需改这一行**：
+打开 `admin.config.json`，只需要改这一行：
 
 ```json
 {
@@ -48,53 +103,27 @@ copy admin.config.example.json admin.config.json
 }
 ```
 
-### 3. 启动
+### 4. 启动
 
-**推荐：双击 `start-admin.bat`**。它会依次检查依赖 → 检查配置（缺了就打开记事本让你填）→ 编译后端 → 构建前端 → 启动服务。脚本直接调用 `node_modules` 里的 `tsc` / `vite`，**不经过 pnpm/npm 的脚本系统**，因此不会被包管理器的策略或版本问题卡住。
+**Windows 直接双击 `start-admin.bat`**。它会检查依赖 → 检查配置（缺了就弹出记事本让你填）→ 编译后端 → 构建前端 → 启动服务并打开浏览器。
 
-手动等价流程：
+手动启动：
 
 ```bash
-node node_modules/typescript/bin/tsc -p tsconfig.server.json
-node node_modules/vite/bin/vite.js build
-node dist-server/index.js
+node node_modules/typescript/bin/tsc -p tsconfig.server.json   # 编译后端 → dist-server/
+node node_modules/vite/bin/vite.js build                       # 构建前端 → web/dist/
+node dist-server/index.js                                      # 启动，默认 http://127.0.0.1:4310
 ```
 
-浏览器会自动打开 `http://127.0.0.1:4310`。
+> 脚本直接调 `node_modules` 里的 `tsc` / `vite`，不经过 pnpm/npm 的脚本系统，避免被包管理器策略或版本问题卡住。
 
-> 编译后端 + 构建前端约 10~20 秒。产物分别是 `dist-server/` 和 `web/dist/`，都在 `.gitignore` 里。
-> 运行期数据放在项目根目录 `data/`（事务快照、日志）。
+## 预览、构建与部署
 
----
+**预览**：编辑页点「保存并预览」→ 后台按需启动 `astro dev`（懒启动、可复用）→ 抽屉里 iframe 打开对应页面。
 
-## 二、配置项
+> dev 模式下没有 Pagefind 搜索索引、没有 LQIP 占位、字体未子集化——那些都是构建期产物。预览用来确认内容和排版，最终验收以构建后的线上效果为准。
 
-`admin.config.json`（修改后需重启后台）：
-
-| 字段 | 默认 | 说明 |
-|---|---|---|
-| `repoPath` | — | **必填**，Firefly 仓库绝对路径 |
-| `host` | `127.0.0.1` | 不要改成 `0.0.0.0`，否则同局域网可访问你的后台 |
-| `port` | `4310` | 后台端口 |
-| `devPort` | `4321` | `astro dev` 预览端口 |
-| `gitCommit` | `true` | 每次写入后自动 `git commit`，便于回滚 |
-| `autoRestartDevOnConfigChange` | `true` | 改配置文件后自动重启 dev |
-| `media.maxEdge` | `2560` | 上传图片长边上限（px） |
-| `media.webpQuality` | `82` | webp 质量 |
-| `media.convertToWebp` | `true` | 是否统一转 webp；`false` 时保留 jpg |
-| `buildSteps` | 见下 | 自定义构建命令 |
-
-### 关于 buildSteps
-
-默认只跑 `astro build`（快，够本地预览）：
-
-```json
-"buildSteps": [
-  { "label": "astro build", "command": "node", "args": ["node_modules/astro/bin/astro.mjs", "build"] }
-]
-```
-
-如果你希望后台点「构建站点」产出**可直接上线的完整 dist**（含 LQIP、字体子集、Pagefind 搜索索引），改成走博客自己的构建脚本：
+**构建**：顶栏「构建站点」→ SSE 实时日志。默认只跑 `astro build`，想产出可上线的完整 `dist`（含 LQIP / 字体子集 / 搜索索引），在配置里换成博客自己的构建脚本：
 
 ```json
 "buildSteps": [
@@ -102,201 +131,106 @@ node dist-server/index.js
 ]
 ```
 
-> Windows 上 `pnpm` 是 `.cmd`，后台已经对 `.cmd` 自动加 `shell: true`。
+**部署**：后台不碰部署。构建完点「设置 → 打开 dist 目录」，用 FTP / 主机面板上传即可。上千个小文件建议打 zip 再解压，比逐个传快得多。
 
----
+## 五个模块写到哪里
 
-## 三、五个模块
-
-| 模块 | 写入位置 | 说明 |
-|---|---|---|
-| **文章** | `src/content/posts/<slug>/index.md` + `images/` | bundle 形式，图片跟文章走 |
-| **动态** | `src/content/dynamic/<时间戳>.md` | 文件名即 URL，编辑时间不会重命名 |
-| **项目** | `src/content/projects/<slug>.md` | frontmatter + README 正文 |
-| **相册** | `public/gallery/<albumId>/` + `src/config/galleryConfig.ts` 的 `albums` | 照片目录 + 配置数组双写 |
-| **友链** | `src/config/friendsConfig.ts` 的 `friendsConfig` 数组 | 停用请设 `enabled: false` |
-
-### 几个已经替你处理掉的坑
-
-- **日期不加引号**：`published: 2025-12-01`（加了引号就是字符串，会触发 `z.date()` 校验失败、整站构建失败）。后台写入前会做 round-trip 校验，类型漂移直接拒绝保存。
-- **含冒号/井号的字符串自动加引号**：`description: "含冒号: 的内容"`。
-- **字段顺序固定**：每次保存的 git diff 只包含真实改动。
-- **TS 配置只替换数组区间的文本**：`import`、注释、类型注解、其它字段原样保留；改写后做语法校验，失败自动回滚。
-- **删除文章连带删图片目录**；删除相册连带删配置项和照片目录。
-- **相册 ID 不可修改**（改了就断链），封面通过把文件重命名为 `cover.*` 实现，与主题规则天然对齐。
-- **图片上传**：EXIF（含 GPS）剥离、按 EXIF 方向自动摆正、长边限制、转 webp、SHA256 去重。
-
----
-
-## 四、预览、构建与部署
-
-### 预览
-
-编辑页点「预览」/「保存并预览」：
-
-1. 后台按需启动 `astro dev`（首次约 5~15 秒，之后复用）
-2. 抽屉里用 iframe 展示 `http://localhost:4321/<对应路由>`
-
-**预览 = 主题真实渲染**（Mermaid、Callout、KaTeX、代码块全部生效），不是自己写的一套 Markdown 渲染。
-
-注意：dev 模式下 Pagefind 搜索索引不存在（那是构建产物），所以别在预览里验收搜索。
-
-### 构建
-
-顶部「构建站点」→ 抽屉里实时看日志（SSE 推送）。构建成功后产物在博客仓库的 `dist/`，点「设置 → 打开 dist 目录」可直接打开。
-
-### 部署（手动）
-
-用你习惯的方式（FTP / 主机面板 / FileZilla）把 `dist/` 整个上传覆盖到虚拟主机站点根目录即可。
-
-> `dist/` 里有上千个小文件，建议**打包成 zip 上传后在主机面板解压**，比逐文件 FTP 快很多，也不容易传到一半断掉。
-
----
-
-## 五、目录结构
-
-```
-firefly-admin/
-├─ admin.config.example.json
-├─ start-admin.bat            一键启动
-├─ package.json
-├─ tsconfig.json              前端 TS
-├─ tsconfig.server.json       后端 TS（编译到 dist-server）
-├─ vite.config.mjs
-├─ public/assets/images/       前端静态资源（站点图标等）
-├─ scripts/
-│  ├─ check-web.mjs           单独校验所有 .vue / .ts 能否编译
-│  └─ smoke.mjs               端到端烟测
-├─ server/src/
-│  ├─ index.ts                启动入口
-│  ├─ config.ts               读 admin.config.json
-│  ├─ content/
-│  │  ├─ registry.ts          五个内容类型的字段定义（唯一真源）
-│  │  ├─ frontmatter.ts       YAML 序列化 + round-trip 校验
-│  │  ├─ ts-array.ts          TS 配置数组的 AST 读写
-│  │  └─ repository.ts        ContentRepository（唯一文件入口）
-│  ├─ infra/
-│  │  ├─ paths.ts             路径白名单与安全校验
-│  │  ├─ fsx.ts               原子写、事务快照
-│  │  ├─ git.ts               git 提交（失败不阻断）
-│  │  ├─ media.ts             sharp 图片管线
-│  │  └─ process.ts           astro dev / build 子进程管理
-│  └─ http/
-│     ├─ server.ts            Fastify 装配
-│     └─ routes/              content / media / albums / build / system
-└─ web/src/
-   ├─ api.ts  store.ts  router.ts  App.vue
-   ├─ components/  FieldInput.vue、MarkdownEditor.vue
-   └─ pages/       Dashboard、ContentList、ContentEditor、AlbumDetail、MediaLibrary、Settings
-```
-
----
-
-## 六、接口一览
-
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| GET | `/api/system/meta` | 五种类型的字段定义（前端表单据此渲染） |
-| GET | `/api/system/status` | 仓库路径、git 状态、dev 状态、构建状态 |
-| POST | `/api/system/start-dev` / `restart-dev` / `stop-dev` | 预览服务 |
-| POST | `/api/system/open-dist` | 打开 `dist` 目录 |
-| GET | `/api/content/:type` | 列表 |
-| GET | `/api/content/:type/:id` | 详情 |
-| POST | `/api/content/:type` | 新建 |
-| PUT | `/api/content/:type/:id` | 更新 |
-| DELETE | `/api/content/:type/:id` | 删除 |
-| POST | `/api/media/upload` | 上传图片（multipart：`file` + `targetType` + `targetId`） |
-| GET | `/api/albums/:id/photos` | 相册照片 |
-| POST | `/api/albums/:id/photos` | 批量上传照片 |
-| POST | `/api/albums/:id/cover` | 设封面 |
-| DELETE | `/api/albums/:id/photos/:name` | 删照片 |
-| POST | `/api/build/run` / `cancel` | 触发 / 取消构建 |
-| GET | `/api/build/status` / `log` / `events` | 状态 / 日志 / SSE 实时流 |
-
----
-
-## 七、安全边界
-
-- 服务只监听 `127.0.0.1`，不对外暴露；没有账号体系（本机即权限）。
-- **写操作白名单**（其余一律 403）：
-  `src/content/{posts,dynamic,projects,spec}/**`、`public/gallery/**`、`public/assets/images/**`、`src/config/galleryConfig.ts`、`src/config/friendsConfig.ts`
-- 拒绝 `..`、绝对路径、Windows 保留名；`slug` / `albumId` 只允许小写字母数字连字符。
-- `admin.config.json` 已在 `.gitignore`（可能含路径信息），别忘了 `admin.config.example.json` 是给克隆者的模板。
-
-⚠️ **文章密码是明文写进 Markdown 的**（Firefly 的加密机制决定），因此也会进入 git 历史。公开仓库不要用真实密码，界面里已做醒目提示。
-
----
-
-## 八、排错
-
-| 现象 | 原因 / 处理 |
+| 模块 | 写入位置 |
 |---|---|
-| `pnpm install` 报 `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION` | pnpm 12 起默认拒绝安装发布时间不足 24 小时的包（`minimumReleaseAge = 1440`），rollup 的平台二进制包经常中招。项目根已带 `pnpm-workspace.yaml`（`minimumReleaseAge: 0`）自动放宽；若仍报错，执行 `pnpm install --config.minimumReleaseAge=0`，或降级：`corepack prepare pnpm@11.22.0 --activate` |
-| 双击 bat 出现 `'xxx' 不是内部或外部命令` | 早期版本的 bat 是 UTF-8 中文，cmd 按 GBK 解析会把命令行拆坏。已改为纯英文脚本，请使用最新版 |
-| 启动报 `未配置博客仓库路径` | 没复制 `admin.config.example.json`，或 `repoPath` 为空 |
-| 启动报 `repoPath 不存在` / `不是 Firefly 仓库` | 路径写错，或该目录缺 `astro.config.mjs` |
-| 启动报 `EADDRINUSE` | 端口被占，改 `admin.config.json` 的 `port` |
-| 点预览报 `找不到 Astro 可执行文件` | 博客仓库没装依赖，去仓库目录执行 `pnpm install` |
-| 点构建报 `缺少 node_modules` | 同上 |
-| 保存后页面没变化 | 预览是 dev 实时读文件的；线上需要重新构建 + 上传 `dist` |
-| 改了相册/友链但页面没变 | 改 `src/config/*.ts` 后 dev 需要重启，用「设置 → 重启 dev server」 |
-| 保存报 `frontmatter 校验失败` | 某个字段序列化后类型变了（通常是日期格式），按提示改格式 |
-| 保存报 `图片引用不存在` | 只是警告，说明正文里引用了不存在的图片，构建时该图会 404 |
-| 点"编辑相册信息"报 `未找到相册：0` | 已修复（列表返回的 `id` 之前是数组下标，现统一为 albumId） |
-| 编辑页里的图片显示不出来 | 已修复（后台新增 `/repo-assets/` 只读托管博客 `public/`，表单图片走它预览）。`./相对路径` 无法预览，属预期 |
-| 相册封面设置了不生效 | 封面必须以 `/` 开头（如 `/gallery/<id>/cover.webp`）。填 `cover.jpg` 会自动补成 `/gallery/<albumId>/cover.jpg`，重新保存一次即可 |
-| 相册里部分照片不显示（中文名、或刚上传的） | 已修复（`@fastify/static` 之前设了 `wildcard: false`，会在启动时按目录快照注册路由，导致之后新增的文件和中文/空格文件名 404） |
-| 设为封面后显示的还是旧图 | 已修复（现在重命名文件的同时会同步更新 `galleryConfig` 的 `cover`，否则配置里的旧路径优先级更高） |
-| 换封面后原来的封面图不见了 | 已修复（旧封面会归档成 `cover-<时间戳>.<ext>` 保留在相册里，不会再被当成封面） |
-| 新建相册时传封面报"需要提供 albumId" | 已修复（新建时封面统一上传到 `public/gallery/_covers/`，不会提前创建相册目录） |
-| 换封面后编辑页还是显示旧封面 | 已修复（`/repo-assets/` 改为 `max-age=0`，并给图片 URL 加 `?v=<mtime>`，同名文件内容变了也会重新加载） |
-| 切换模块后列表还是上一个模块的内容 | 已修复（`ContentList` 监听 `route.params.type` 重新加载） |
+| 文章 | `src/content/posts/<slug>/index.md` + `images/` |
+| 动态 | `src/content/dynamic/<时间戳>.md` |
+| 项目 | `src/content/projects/<slug>.md` |
+| 相册 | `public/gallery/<albumId>/` + `galleryConfig.ts` 的 `albums` |
+| 友链 | `friendsConfig.ts` 的 `friendsConfig` 数组 |
 
----
+## 已经替你处理掉的坑
 
-## 九、开发
+这些都是 Firefly 的实际行为，后台在写入前就处理了：
+
+| 坑 | 处理方式 |
+|---|---|
+| `published: "2025-01-01"` 加了引号 | 日期一律裸输出；写入前做 round-trip 校验，类型漂移直接拒绝保存 |
+| `description` 里有冒号 / 井号 | 自动加双引号，避免 YAML 解析失败 |
+| 每次保存产生全文件 diff | 字段顺序固定，diff 只包含真实改动 |
+| 改 `galleryConfig.ts` 丢了注释和 import | 只替换数组节点的文本区间，其余字节一个不动 |
+| 相册封面 `cover.jpg` 不生效 | Firefly 会把它补成站根 `/cover.jpg`，后台自动补全为 `/gallery/<albumId>/cover.jpg` |
+| 换封面后照片消失 | 旧封面归档为 `cover-<时间戳>.<ext>` 保留 |
+| 换封面后页面还是旧图 | `/repo-assets/` 关缓存 + 图片 URL 带 `?v=<mtime>` 强制刷新 |
+| 图片带 GPS 信息 | sharp 默认不保留 EXIF |
+| 动态改时间导致断链 | 「编辑时间」只改 frontmatter，绝不重命名文件 |
+| 手滑删错文章 | 每次保存自动 `git commit`，用 `git log` 回滚 |
+
+## 配置项
+
+`admin.config.json`（修改后需重启后台）：
+
+| 字段 | 默认 | 说明 |
+|---|---|---|
+| `repoPath` | — | **必填**，Firefly 仓库绝对路径 |
+| `host` | `127.0.0.1` | 不要改成 `0.0.0.0` |
+| `port` | `4310` | 后台端口 |
+| `devPort` | `4321` | 预览用 `astro dev` 端口 |
+| `gitCommit` | `true` | 每次写入后自动 git commit |
+| `autoRestartDevOnConfigChange` | `true` | 改配置后自动重启 dev |
+| `media.maxEdge` | `2560` | 图片长边上限（px） |
+| `media.webpQuality` | `82` | webp 质量 |
+| `media.convertToWebp` | `true` | 是否统一转 webp |
+| `media.maxUploadBytes` | `26214400` | 单图上限（25MB） |
+
+也可以用环境变量覆盖：`FIREFLY_REPO`、`PORT`。
+
+## 项目结构
+
+```
+columbina-admin/
+├─ start-admin.bat             一键启动（Windows）
+├─ admin.config.example.json   配置样例
+├─ public/assets/images/       前端静态资源（站点图标等）
+├─ docs/PROJECT.md             完整技术文档
+├─ server/src/
+│  ├─ content/                 registry（字段定义）/ frontmatter / ts-array / repository
+│  ├─ infra/                   paths 白名单 / fsx 原子写 / git / media / process
+│  ├─ http/                    Fastify 装配 + routes
+│  └─ index.ts
+├─ web/src/
+│  ├─ components/              FieldInput / MarkdownEditor
+│  └─ pages/                   Dashboard / ContentList / ContentEditor / AlbumDetail / MediaLibrary / Settings
+└─ scripts/                    check-web / smoke
+```
+
+## 开发
 
 ```bash
-pnpm dev           # 后端(4310) + vite(5173) 并行，前端改代码热更新
+pnpm dev           # 后端 + vite 并行，前端热更新
 pnpm build         # 编译后端 + 构建前端
 pnpm typecheck     # 后端类型检查
-pnpm check:web     # 用 Vue 官方编译器校验所有 .vue / .ts
-pnpm smoke         # 端到端烟测（需服务已启动）
+pnpm check:web     # 用 Vue 官方编译器校验所有 .vue
+pnpm smoke         # 端到端烟测（57 项断言，需服务已启动）
 ```
 
-烟测会临时往仓库里写测试文章/相册/友链/动态/项目，跑完自动清理（`KEEP=1` 可保留）。
-
-**PowerShell：**
+烟测会临时写入测试数据并自动清理：
 
 ```powershell
 $env:BASE='http://127.0.0.1:4310'; pnpm smoke
 ```
 
-（后端改了代码后需要重新 `pnpm build:server`；`pnpm dev` 里已经包含这一步。）
+## 已知限制
 
-### 验证手段
+- **单用户、无鉴权**。只适合在本机跑，不要暴露到公网。
+- **不做自动部署**。构建产物交给你手动上传（这是刻意的设计，链路最短）。
+- **列表每次全量扫盘**。几百篇文章无感，上千篇需要加索引。
+- **预览依赖博客仓库的 `node_modules`**。
 
-| 命令 | 验证什么 |
-|---|---|
-| `pnpm check:web` | 用 Vue 官方编译器逐个编译 `.vue`（模板 + `<script setup>`），不依赖 vite/esbuild |
-| `pnpm smoke` | 47 项端到端断言：五模块 CRUD、frontmatter 序列化规则（日期裸值/引号/tags/links）、TS 配置 AST 改写、图片管线、路径安全、构建触发 |
-| `pnpm typecheck` | 后端类型检查 |
+## 文档
 
-如果你在**无法派生 esbuild 子进程**的环境（受限沙箱、某些 CI）里想验证前端能否打包，可以用仓库里附带的兜底配置（正常环境完全不需要）：
+完整的架构说明、写入管线、预览实现原理、API 参考、设计决策记录，都在 **[`docs/PROJECT.md`](docs/PROJECT.md)**。
 
-```bash
-node --import ./scripts/patch-register.mjs node_modules/vite/bin/vite.js build \
-  --config vite.config.verify.mjs --configLoader runner
-```
+## 致谢
 
-它会用 TypeScript 编译器替代 esbuild 做转译、跳过压缩，只验证"所有模块能解析、SFC 能编译、产物能生成"。
+- [Firefly](https://github.com/CuteLeaf/Firefly) —— 本项目服务的博客主题
+- [Fuwari](https://github.com/saicaca/fuwari) —— Firefly 的上游模板
+- 预览能力来自 Astro 自带的 dev server，本项目只负责编排进程
 
----
+## License
 
-## 十、设计取舍（为什么这么做）
-
-- **不碰博客源码结构**：只写内容文件与配置里"值"的部分，`astro.config.mjs`、`src/pages`、`components`、`utils` 一律只读。
-- **不自己渲染 Markdown**：预览交给 `astro dev`，避免"后台好看、上线翻车"。
-- **不做自动部署**：构建产物交给你手动传，链路最短、最少出错。
-- **元驱动**：五个模块的字段定义集中在一处（`content/registry.ts`），加新类型只需加一个描述符。
-- **写入必经管线**：路径白名单 → 事务快照 → 序列化 → 校验（round-trip / 图片引用 / TS 语法）→ 原子写 → git commit，失败即回滚。
+[MIT](LICENSE)

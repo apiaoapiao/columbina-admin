@@ -1,9 +1,9 @@
 {
-  "name": "firefly-admin",
+  "name": "columbina-admin",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Firefly 博客本地后台管理系统（Fastify + Vue3）",
+  "description": "Columbina Admin —— 给 Firefly 博客用的本地内容管理后台（Fastify + Vue3）",
   "engines": {
     "node": ">=20.11.0"
   },

@@ -1,7 +1,11 @@
 node_modules/
+node_modules_bak/
 dist-server/
 web/dist/
 data/
 admin.config.json
 *.log
 .tmp/
+*.local
+.DS_Store
+Thumbs.db
