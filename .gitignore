@@ -9,3 +9,4 @@ admin.config.json
 *.local
 .DS_Store
 Thumbs.db
+docs/

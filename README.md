@@ -18,6 +18,8 @@
 
 ---
 
+**此项目目前为V0.1**
+
 ## 这是什么
 
 Firefly 是「文件即内容 + 构建即发布」的静态博客，写作时的日常操作是这样：
@@ -28,7 +30,7 @@ Firefly 是「文件即内容 + 构建即发布」的静态博客，写作时的
 - 动态的文件名就是 URL，改个时间容易改出断链
 - 想看效果得开终端跑 `pnpm dev`，再切到浏览器刷新
 
-**Columbina Admin 把这些变成点几下鼠标**，而且完全不碰博客本身：
+**Columbina Admin（我自己博客名） 把这些变成点几下鼠标**，而且完全不碰博客本身：
 
 - 不修改 `astro.config.mjs`、不碰 `src/pages`、不加数据库
 - 只写内容文件（md）、图片目录、以及 TS 配置里的**值**
@@ -143,23 +145,6 @@ node dist-server/index.js                                      # 启动，默认
 | 相册 | `public/gallery/<albumId>/` + `galleryConfig.ts` 的 `albums` |
 | 友链 | `friendsConfig.ts` 的 `friendsConfig` 数组 |
 
-## 已经替你处理掉的坑
-
-这些都是 Firefly 的实际行为，后台在写入前就处理了：
-
-| 坑 | 处理方式 |
-|---|---|
-| `published: "2025-01-01"` 加了引号 | 日期一律裸输出；写入前做 round-trip 校验，类型漂移直接拒绝保存 |
-| `description` 里有冒号 / 井号 | 自动加双引号，避免 YAML 解析失败 |
-| 每次保存产生全文件 diff | 字段顺序固定，diff 只包含真实改动 |
-| 改 `galleryConfig.ts` 丢了注释和 import | 只替换数组节点的文本区间，其余字节一个不动 |
-| 相册封面 `cover.jpg` 不生效 | Firefly 会把它补成站根 `/cover.jpg`，后台自动补全为 `/gallery/<albumId>/cover.jpg` |
-| 换封面后照片消失 | 旧封面归档为 `cover-<时间戳>.<ext>` 保留 |
-| 换封面后页面还是旧图 | `/repo-assets/` 关缓存 + 图片 URL 带 `?v=<mtime>` 强制刷新 |
-| 图片带 GPS 信息 | sharp 默认不保留 EXIF |
-| 动态改时间导致断链 | 「编辑时间」只改 frontmatter，绝不重命名文件 |
-| 手滑删错文章 | 每次保存自动 `git commit`，用 `git log` 回滚 |
-
 ## 配置项
 
 `admin.config.json`（修改后需重启后台）：
@@ -216,8 +201,6 @@ $env:BASE='http://127.0.0.1:4310'; pnpm smoke
 
 ## 已知限制
 
-- **单用户、无鉴权**。只适合在本机跑，不要暴露到公网。
-- **不做自动部署**。构建产物交给你手动上传（这是刻意的设计，链路最短）。
 - **列表每次全量扫盘**。几百篇文章无感，上千篇需要加索引。
 - **预览依赖博客仓库的 `node_modules`**。
 
